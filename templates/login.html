@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Cricket Predictor</title>
+  <style>
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url("{{ url_for('static', filename='background.jpg') }}");
+        background-size: cover;
+        background-position: center;
+        filter: blur(8px);
+        z-index: -1;
+    }
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(120deg, #007bff, #00c6ff);
+        color: #fff;
+        text-align: center;
+        padding: 40px;
+    }
+    .container {
+        background: rgba(255,255,255,0.15);
+        padding: 30px;
+        border-radius: 15px;
+        width: 400px;
+        margin: auto;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    input, button {
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 10px;
+        border: none;
+        font-size: 16px;
+    }
+    button {
+        background-color: #ffcc00;
+        color: #000;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s ease-in-out;
+    }
+    button:hover { background-color: #ffdb4d; }
+
+    /* Flash message box */
+    .flash-box {
+        background: rgba(255, 0, 0, 0.4);
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        font-size: 15px;
+        color: #ffcc00;
+        font-weight: bold;
+    }
+
+    /* Yellow register link */
+    .yellow-link {
+        color: #ffcc00 !important;
+        font-weight: bold;
+        text-decoration: none;
+    }
+    .yellow-link:hover { text-decoration: underline; }
+
+    /* Navbar */
+    .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        background: rgba(255,255,255,0.15);
+        padding: 10px 20px;
+        border-radius: 0 0 10px 10px;
+        align-items: center;
+        gap: 30px;
+    }
+    .navbar a { color:#fff; text-decoration:none; font-weight:bold; margin:0 10px; }
+    .navbar .dropdown { position: relative; display: inline-block; }
+    .navbar .dropdown-content { display:none; position: fixed; background-color: rgba(0,0,0,0.7); min-width:120px; box-shadow:0 8px 16px rgba(0,0,0,0.2); border-radius:8px; }
+    .navbar .dropdown-content a { color:#fff; padding:8px 12px; display:block; text-decoration:none; }
+    .navbar .dropdown:hover .dropdown-content { display:block; }
+    body { padding-top:70px; }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+    <a href="{{ url_for('home') }}">Home</a>
+    <a href="{{ url_for('message_us') }}">Message Us</a>
+    <a href="{{ url_for('history') }}">History</a>
+    <a href="{{ url_for('about') }}">About Us</a>
+
+    <div class="dropdown">
+        <a href="#">Account ▼</a>
+        <div class="dropdown-content">
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('register') }}">Register</a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <h2>Login</h2>
+
+    <!-- Registration success message -->
+   {% with messages = get_flashed_messages(category_filter=["register_success"]) %}
+  {% if messages %}
+    <div class="flash-box">{{ messages[0] }}</div>
+  {% endif %}
+{% endwith %}
+
+
+    <!-- Login error message -->
+    {% with messages = get_flashed_messages(category_filter=["login_error"]) %}
+      {% if messages %}
+        <div class="flash-box">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login') }}">
+        <input type="text" name="username" placeholder="Username" required><br>
+        <input type="password" name="password" placeholder="Password" required><br>
+        <button type="submit">Login</button>
+    </form>
+
+    <p style="text-align:center; margin-top:10px;">
+        Don't have an account?
+        <a href="{{ url_for('register') }}" class="yellow-link">Register here</a>
+    </p>
+</div>
+
+{% include 'footer.html' %}
+</body>
+</html>

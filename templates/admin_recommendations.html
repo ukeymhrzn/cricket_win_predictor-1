@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Recommendations</title>
+<style>
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image: url("{{ url_for('static', filename='background.jpg') }}");
+    background-size: cover;
+    background-position: center;
+    filter: blur(8px);
+    z-index: -1;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    color: #fff;
+    padding: 80px 20px 20px 20px;
+    margin: 0;
+    text-align: center;
+}
+
+.container { 
+    max-width: 800px; 
+    margin: auto; 
+    background: rgba(255,255,255,0.15); 
+    padding: 20px; 
+    border-radius: 15px; 
+}
+
+/* Horizontal form layout */
+form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    align-items: center;
+}
+
+input, select { 
+    width: 150px; 
+    padding: 7px; 
+    border-radius: 8px; 
+    border: none; 
+    font-size: 14px; 
+}
+
+button.add-btn { 
+    background-color: #ffcc00; 
+    color: #000; 
+    font-weight: bold; 
+    cursor: pointer; 
+    padding: 7px 20px; 
+    border-radius: 8px; 
+    font-size: 14px; 
+    transition: 0.2s;
+}
+button.add-btn:hover { background-color: #ffdb4d; }
+
+table { 
+    width: 100%; 
+    margin-top: 20px; 
+    border-collapse: collapse; 
+}
+th, td { 
+    padding: 8px; 
+    border-bottom: 1px solid rgba(255,255,255,0.3); 
+    text-align: left; 
+    font-size: 14px; 
+}
+
+button.delete-btn { 
+    background-color: #ff4d4d; 
+    color: #fff; 
+    padding: 3px 10px; 
+    border-radius: 5px; 
+    font-size: 12px; 
+    cursor: pointer; 
+    border: none; 
+    transition: 0.2s; 
+}
+button.delete-btn:hover { background-color: #ff1a1a; }
+</style>
+</head>
+<body>
+
+{% include 'admin_header.html' %}
+
+<div class="container">
+    <h2>Add Recommendation</h2>
+
+    <form method="POST">
+        <input type="text" name="team1" id="team1" placeholder="Team 1" required list="teamsList">
+        <input type="text" name="team2" id="team2" placeholder="Team 2" required list="teamsList2">
+        <select name="format" required>
+            <option value="">Format</option>
+            <option value="ODI">ODI</option>
+            <option value="T20">T20</option>
+        </select>
+        <input type="text" name="venue" id="venue" placeholder="Venue" required list="venuesList">
+        <input type="date" name="match_date" id="match_date" required>
+
+        <button type="submit" class="add-btn">Add Recommendation</button>
+
+        <datalist id="teamsList"></datalist>
+        <datalist id="teamsList2"></datalist>
+        <datalist id="venuesList"></datalist>
+    </form>
+
+    {% if recs %}
+    <h3>Existing Recommendations</h3>
+    <table>
+        <tr>
+            <th>#</th>
+            <th>Team 1</th>
+            <th>Team 2</th>
+            <th>Format</th>
+            <th>Venue</th>
+            <th>Action</th>
+        </tr>
+
+        {% for r in recs %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ r.team1 }}</td>
+            <td>{{ r.team2 }}</td>
+            <td>{{ r.match_format }}</td>
+            <td>{{ r.venue }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('delete_recommendation', rec_id=r.id) }}" style="display:inline;">
+                    <button type="submit" class="delete-btn">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const teams = {{ teams | tojson }};
+const venues = {{ venues | tojson }};
+
+    const team1Input = document.getElementById('team1');
+    const team2Input = document.getElementById('team2');
+    const venueInput = document.getElementById('venue');
+
+    const teamsList1 = document.getElementById('teamsList');
+    const teamsList2 = document.getElementById('teamsList2');
+    const venuesList = document.getElementById('venuesList');
+
+    // Populate datalists
+    teams.forEach(team => {
+        const opt1 = document.createElement('option'); opt1.value = team; teamsList1.appendChild(opt1);
+        const opt2 = document.createElement('option'); opt2.value = team; teamsList2.appendChild(opt2);
+    });
+
+    venues.forEach(v => {
+        const opt = document.createElement('option'); opt.value = v; venuesList.appendChild(opt);
+    });
+
+    // Update Team 2 options when Team 1 changes
+    team1Input.addEventListener('change', () => {
+        const team1 = team1Input.value;
+        team2Input.value = '';
+        teamsList2.innerHTML = '';
+        teams.forEach(team => {
+            if (team !== team1) {
+                const opt = document.createElement('option');
+                opt.value = team;
+                teamsList2.appendChild(opt);
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>

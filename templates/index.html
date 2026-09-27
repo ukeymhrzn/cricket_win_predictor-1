@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricket Match Win Predictor</title>
+<style>
+    /* Background blur */
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-image: url("{{ url_for('static', filename='background.jpg') }}");
+        background-size: cover;
+        background-position: center;
+        filter: blur(8px);
+        z-index: -1;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        color: #fff;
+        padding: 80px 20px 20px 20px;
+        margin: 0;
+        text-align: center;
+    }
+
+    h1 { margin-bottom: 20px; }
+
+    .main-container {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    /* Prediction form */
+    .prediction-container {
+        background: rgba(255,255,255,0.15);
+        padding: 30px;
+        border-radius: 15px;
+        width: 400px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        text-align: left;
+    }
+
+    input, select, button {
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 10px;
+        border: none;
+        font-size: 16px;
+    }
+
+    input[list] { background-color: #fff; color: #000; }
+
+    button {
+        background-color: #ffcc00;
+        color: #000;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s ease-in-out;
+    }
+    button:hover { background-color: #ffdb4d; }
+
+    #result { margin-top: 20px; font-size: 20px; font-weight: bold; }
+
+    .spinner-container { display: none; margin-top: 20px; text-align: center; opacity: 0; transition: opacity 0.3s ease; }
+    .spinner-container.active { display: block; opacity: 1; }
+    .spinner {
+        border: 5px solid rgba(255,255,255,0.3);
+        border-top: 5px solid #ffcc00;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 10px auto;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loading-text { font-size: 16px; color: #fff; opacity: 0.9; margin-top: 5px; }
+    #login-warning { color:#ffdddd; font-size:14px; margin-bottom:10px; }
+
+    /* Recommendations sidebar */
+    .recommendations-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 300px;
+    }
+    .recommendations-title {
+        text-align: center;
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+    .recommendations-container {
+        background: rgba(255,255,255,0.15);
+        padding: 20px;
+        border-radius: 15px;
+        width: 100%;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        text-align: left;
+    }
+    .recommendation-item {
+        background: rgba(255,255,255,0.1);
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    .recommendation-item:hover {
+        background: rgba(255,255,255,0.25);
+    }
+</style>
+</head>
+<body>
+
+{% include 'header.html' %}
+
+<h1>Cricket Match Win Predictor</h1>
+
+<div class="main-container">
+    <!-- Prediction form -->
+    <div class="prediction-container">
+        {% if not current_user.is_authenticated %}
+            <p id="login-warning">* Please login to predict</p>
+        {% endif %}
+
+        <label>Match Format:</label><br>
+        <select id="format" {% if not current_user.is_authenticated %}disabled{% endif %}>
+            <option value="">-- Select Format --</option>
+            <option value="ODI">ODI</option>
+            <option value="T20">T20</option>
+        </select><br>
+
+        <label>Team 1:</label><br>
+        <input id="team1" list="teamsList" placeholder="Search or select Team 1" {% if not current_user.is_authenticated %}disabled{% endif %}>
+        <datalist id="teamsList"></datalist><br>
+
+        <label>Team 2:</label><br>
+        <input id="team2" list="teamsList2" placeholder="Search or select Team 2" disabled>
+        <datalist id="teamsList2"></datalist><br>
+
+        <label>Venue:</label><br>
+        <input id="venue" list="venuesList" placeholder="Search or select Venue" {% if not current_user.is_authenticated %}disabled{% endif %}>
+        <datalist id="venuesList"></datalist><br>
+
+        <label>Toss Winner:</label><br>
+        <select id="toss_winner" disabled><option value="">-- Select Toss Winner --</option></select><br>
+
+        <button id="predict-btn" onclick="predictWinner()" {% if not current_user.is_authenticated %}disabled{% endif %}>Predict Winner</button>
+
+        <div id="spinnerContainer" class="spinner-container">
+            <div class="spinner"></div>
+            <div class="loading-text">Calculating prediction...</div>
+        </div>
+        <div id="result"></div>
+    </div>
+
+    <!-- Recommendations -->
+{% if current_user.is_authenticated %}
+<div class="recommendations-wrapper">
+    <div class="recommendations-title">Match recommendations for you!</div>
+    <div class="recommendations-container">
+        {% if recommendations %}
+            {% for rec in recommendations %}
+                <div class="recommendation-item" onclick="fillPredictionForm('{{ rec.team1 }}','{{ rec.team2 }}','{{ rec.match_format }}','{{ rec.venue }}')">
+                    <strong>{{ rec.team1 }} vs {{ rec.team2 }}</strong><br>
+                    Format: {{ rec.match_format }}<br>
+                    Venue: {{ rec.venue if rec.venue else 'TBD' }}<br>
+                    Match day: {{ rec.match_date.strftime('%d %b %Y') if rec.match_date else 'TBD' }}
+                    
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No recommendations are available.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const teams = {{ teams | tojson }};
+    const venues = {{ venues | tojson }};
+
+    const team1Input = document.getElementById('team1');
+    const team2Input = document.getElementById('team2');
+    const venueInput = document.getElementById('venue');
+    const tossSelect = document.getElementById('toss_winner');
+    const spinnerContainer = document.getElementById('spinnerContainer');
+    const resultDiv = document.getElementById('result');
+
+    const teamsList1 = document.getElementById('teamsList');
+    const teamsList2 = document.getElementById('teamsList2');
+    const venuesList = document.getElementById('venuesList');
+
+    teams.forEach(team => {
+        const opt1 = document.createElement('option'); opt1.value = team; teamsList1.appendChild(opt1);
+        const opt2 = document.createElement('option'); opt2.value = team; teamsList2.appendChild(opt2);
+    });
+
+    venues.forEach(v => { const opt = document.createElement('option'); opt.value = v; venuesList.appendChild(opt); });
+
+    team1Input.addEventListener('change', () => {
+        const team1 = team1Input.value;
+        if (!teams.includes(team1)) return;
+        team2Input.disabled = false;
+        team2Input.value = '';
+        tossSelect.disabled = true;
+        tossSelect.innerHTML = '<option value="">-- Select Toss Winner --</option>';
+        teamsList2.innerHTML = '';
+        teams.forEach(team => { if (team !== team1) { const opt = document.createElement('option'); opt.value = team; teamsList2.appendChild(opt); } });
+    });
+
+    team2Input.addEventListener('change', () => {
+        const team1 = team1Input.value;
+        const team2 = team2Input.value;
+        if (!teams.includes(team2) || team1 === team2) return;
+        tossSelect.disabled = false;
+        tossSelect.innerHTML = '<option value="">-- Select Toss Winner --</option>';
+        [team1, team2].forEach(team => { const opt = document.createElement('option'); opt.value = team; opt.textContent = team; tossSelect.appendChild(opt); });
+    });
+
+    // Updated: Fill venue as well
+    window.fillPredictionForm = function(team1, team2, format, venue='') {
+        document.getElementById('format').value = format;
+        document.getElementById('team1').value = team1;
+        document.getElementById('team2').value = team2;
+        document.getElementById('venue').value = venue;
+
+        team2Input.disabled = false;
+
+        // Re-generate Team 2 list (excluding team1)
+        teamsList2.innerHTML = "";
+        teams.forEach(t => { if (t !== team1) { const opt = document.createElement('option'); opt.value = t; teamsList2.appendChild(opt); } });
+
+        tossSelect.disabled = false;
+        tossSelect.innerHTML = '<option value="">-- Select Toss Winner --</option>';
+        [team1, team2].forEach(t => { const opt = document.createElement('option'); opt.value = t; opt.textContent = t; tossSelect.appendChild(opt); });
+    };
+
+    window.predictWinner = async function() {
+        if (!{{ 'true' if current_user.is_authenticated else 'false' }}) {
+            alert("Please login to predict!");
+            return;
+        }
+
+        const format = document.getElementById('format').value;
+        const team1 = team1Input.value;
+        const team2 = team2Input.value;
+        const venue = venueInput.value;
+        const toss_winner = tossSelect.value;
+
+        if (!format || !team1 || !team2 || !venue || !toss_winner) {
+            resultDiv.innerHTML = "Please fill all fields!";
+            return;
+        }
+
+        spinnerContainer.classList.add('active');
+        resultDiv.innerHTML = "";
+        const startTime = Date.now();
+
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({format, team1, team2, venue, toss_winner})
+            });
+            const data = await response.json();
+
+            const elapsed = Date.now() - startTime;
+            const remaining = 3000 - elapsed;
+            if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining));
+
+            spinnerContainer.classList.remove('active');
+
+            if (data.error) { resultDiv.innerHTML = `Error: ${data.error}`; }
+            else {
+                let resultHtml = `<h3>Predicted Winner: <b>${data.winner}</b></h3>`;
+                resultHtml += `<p><b>Prediction Probabilities:</b></p>`;
+                for (const [team, prob] of Object.entries(data.probabilities)) { resultHtml += `${team}: ${prob}%<br>`; }
+                resultDiv.innerHTML = resultHtml;
+            }
+        } catch (err) {
+            spinnerContainer.classList.remove('active');
+            resultDiv.innerHTML = `Error: ${err.message}`;
+        }
+    };
+});
+</script>
+
+{% include 'footer.html' %}
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>About Us</title>
+    <style>
+
+        
+        .about-container {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            width: 60%;
+            margin: 80px auto;
+            border-radius: 12px;
+            color: #fff;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+
+<body>
+
+      {% include 'header.html' %}
+
+    <div class="about-container">
+        <h2>About Us</h2>
+        <p>
+            {% if info %}
+                {{ info.content | safe }}
+            {% else %}
+                No information added yet.
+            {% endif %}
+        </p>
+    </div>
+
+    {% include 'footer.html' %}
+</body>
+</html>

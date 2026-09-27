@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Users - Admin</title>
+    <style>
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: url("{{ url_for('static', filename='background.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px);
+            z-index: -1;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #fff;
+            padding: 80px 20px 20px 20px;
+            margin: 0;
+            text-align: center;
+        }
+
+        h1 { margin-bottom: 30px; }
+
+        .tables-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            width: 95%;
+            margin: 0 auto;
+        }
+
+        .table-wrapper {
+            width: 48%;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .total-count {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .search-input {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            width: 200px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #fff;
+            color: #fff;
+            text-align: center;
+        }
+
+        th {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        button {
+            background-color: #ff4444;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #ff6666;
+        }
+
+        .make-admin-btn {
+            background-color: #44ff44;
+            margin-right: 5px;
+        }
+
+        .make-admin-btn:hover {
+            background-color: #66ff66;
+        }
+
+        @media screen and (max-width: 1000px) {
+            .tables-container {
+                flex-direction: column;
+                gap: 40px;
+            }
+            .table-wrapper { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+{% include 'admin_header.html' %}
+    <h1>Manage Users & Admins</h1>
+
+    <div class="tables-container">
+        <!-- Admin Table -->
+        <div class="table-wrapper">
+            <div class="header-container">
+                <div class="total-count">Total Admins: {{ admins|length }}</div>
+                <input type="text" id="searchAdmin" class="search-input" onkeyup="searchTable('searchAdmin','adminsTable')" placeholder="Search admin...">
+            </div>
+            <table id="adminsTable">
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Action</th>
+                </tr>
+                {% for admin in admins %}
+                <tr>
+                    <td>{{ admin.id }}</td>
+                    <td>{{ admin.username }}</td>
+                    <td>{{ admin.email }}</td>
+                    <td>
+                        {% if admin.id != current_user.id %}
+                        <form method="POST" action="{{ url_for('delete_user', user_id=admin.id) }}" onsubmit="return confirm('Are you sure you want to delete this admin?');">
+                            <button type="submit">Delete</button>
+                        </form>
+                        {% else %}
+                        <span style="color: #ccc;">You</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <!-- User Table -->
+        <div class="table-wrapper">
+            <div class="header-container">
+                <div class="total-count">Total Users: {{ users|length }}</div>
+                <input type="text" id="searchUser" class="search-input" onkeyup="searchTable('searchUser','usersTable')" placeholder="Search user...">
+            </div>
+            <table id="usersTable">
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Action</th>
+                </tr>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <!-- Make Admin button only for users -->
+                        <form method="POST" action="{{ url_for('make_admin', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to make this user an admin?');">
+                            <button type="submit" class="make-admin-btn">Make Admin</button>
+                        </form>
+
+                        <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function searchTable(inputId, tableId) {
+            const input = document.getElementById(inputId).value.toLowerCase();
+            const table = document.getElementById(tableId);
+            const rows = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < rows.length; i++) {
+                const usernameCell = rows[i].getElementsByTagName("td")[1];
+                if (usernameCell) {
+                    const username = usernameCell.textContent || usernameCell.innerText;
+                    rows[i].style.display = username.toLowerCase().indexOf(input) > -1 ? "" : "none";
+                }
+            }
+        }
+    </script>
+</body>
+</html>

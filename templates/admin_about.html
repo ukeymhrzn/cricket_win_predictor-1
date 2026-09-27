@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit About Us</title>
+    <style>
+       body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: url("{{ url_for('static', filename='background.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px);
+            z-index: -1;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #fff;
+            padding: 80px 20px 20px 20px;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            width: 90%;
+            margin: 20px auto;
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        h1 { margin-bottom: 30px; }
+
+        textarea {
+            width: 95%;
+            height: 250px;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 16px;
+            border: none;
+            resize: vertical;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            margin-top: 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #ffcc00;
+            color: #000;
+        }
+        button:hover { background-color: #ffdb4d; }
+
+        .flash { margin: 10px 0; color: #ffdddd; font-size: 14px; }
+    </style>
+</head>
+
+<body>
+    {% include 'admin_header.html' %}
+
+    <div class="container">
+        <h1>Edit About Us</h1>
+
+        <!-- Flash messages -->
+        {% with flashes = get_flashed_messages(with_categories=true) %}
+            {% if flashes %}
+                {% for category, message in flashes %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <textarea name="content" placeholder="Write About Us here...">{% if about %}{{ about.content }}{% endif %}</textarea>
+            <br>
+            <button type="submit">Save</button>
+        </form>
+    </div>
+</body>
+</html>

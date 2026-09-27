@@ -1,0 +1,113 @@
+<!-- Admin Header / Navbar -->
+<style>
+    body { padding-top: 70px; margin: 0; font-family: Arial, sans-serif; }
+
+    /* Navbar container */
+    .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(255,255,255,0.15);
+        padding: 10px 20px;
+        border-radius: 0 0 10px 10px;
+        box-sizing: border-box;
+        height: 50px;
+        margin-bottom: 70px; /* pushes page content downward */
+    }
+
+    /* Navbar links container */
+    .links {
+        display: flex;
+        gap: 25px;
+        align-items: center; /* vertical center */
+    }
+
+    .navbar a {
+        color: #fff;
+        text-decoration: none;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+
+    /* Account dropdown inline with links */
+    .account-dropdown {
+        position: relative;
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+
+    .account-btn {
+        background: none;
+        border: none;
+        color: #fff;
+        font-weight: bold;
+        font-size: 16px;
+        cursor: pointer;
+        outline: none;
+        display: flex;
+        align-items: center;
+        height: 100%;
+        padding: 0;
+    }
+
+    .account-btn:hover,
+    .account-btn:focus {
+        text-decoration: underline; /* subtle hover effect */
+        background: none;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        top: 100%; /* dropdown below navbar */
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(0,0,0,0.7);
+        min-width: 120px;
+        border-radius: 8px;
+        z-index: 1001;
+    }
+
+    .dropdown-content a {
+        color: #fff;
+        padding: 8px 12px;
+        text-decoration: none;
+        display: block;
+    }
+
+    .account-dropdown:hover .dropdown-content {
+        display: block;
+    }
+</style>
+
+<div class="navbar">
+    <div class="links">
+        <a href="{{ url_for('admin_panel') }}">Home</a>
+        <a href="{{ url_for('admin_messages') }}">Messages</a>
+        <a href="{{ url_for('manage_users') }}">Manage Admin/Users</a>
+        <a href="{{ url_for('admin_recommendations') }}">Recommendation</a>
+        <a href="{{ url_for('admin_about') }}">About Us</a>
+
+        <div class="account-dropdown">
+            {% if current_user.is_authenticated and current_user.is_admin %}
+                <button class="account-btn">Account ▼</button>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('logout') }}">Logout</a>
+                </div>
+            {% else %}
+                <button class="account-btn">Account ▼</button>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('login') }}">Login</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
